@@ -62,6 +62,43 @@ namespace ProxyBrainEx.Controllers
             return Ok(new { exito = true, mensaje = "Usuario registrado con éxito." });
         }
 
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] UsuarioLogin login)
+        {
+            if (string.IsNullOrWhiteSpace(login.Usuario) || string.IsNullOrWhiteSpace(login.Contrasena))
+            {
+                return BadRequest(new { exito = false, mensaje = "Usuario y contraseña son obligatorios." });
+            }
+
+            var controlador = new ControladorBBDD();
+
+            // Buscar usuario por nombre o email
+            var usuarioDB = await controlador.ObtenerUsuarioPorNombreOEmailAsync(login.Usuario);
+            if (usuarioDB == null)
+            {
+                return Unauthorized(new { exito = false, mensaje = "Usuario o contraseña incorrectos." });
+            }
+
+            // Hashear contraseña de entrada y compararla
+            string hashEntrada = Utilidades.HashearContrasena(login.Contrasena);
+            if (usuarioDB.Contrasena != hashEntrada)
+            {
+                return Unauthorized(new { exito = false, mensaje = "Usuario o contraseña incorrectos." });
+            }
+
+            return Ok(new
+            {
+                exito = true,
+                mensaje = "Login correcto.",
+                usuario = new
+                {
+                    nombre = usuarioDB.Nombre,
+                    usuario = usuarioDB.Usuario,
+                    email = usuarioDB.Email
+                }
+            });
+        }
+
 
     }
 }

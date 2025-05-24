@@ -1,7 +1,5 @@
 ﻿using Dapper;
 using ProxyBrainEx.Models;
-using System;
-using System.Threading.Tasks;
 
 namespace ProxyBrainEx.BBDD
 {
@@ -17,8 +15,8 @@ namespace ProxyBrainEx.BBDD
         public async Task<bool> InsertarUsuarioAsync(UsuarioRegistro usuario)
         {
             const string sql = @"
-                INSERT INTO usuarios (guid_id, nombre, usuario, email, contrasena)
-                VALUES (@GuidId, @Nombre, @NombreUsuario, @Email, @Contrasena);";
+				INSERT INTO usuarios (guid_id, nombre, usuario, email, contrasena)
+				VALUES (@GuidId, @Nombre, @NombreUsuario, @Email, @Contrasena);";
 
             try
             {
@@ -55,6 +53,25 @@ namespace ProxyBrainEx.BBDD
             {
                 Console.WriteLine($"Error al verificar existencia de usuario/email: {ex.Message}");
                 return true; // Por seguridad, asumimos que existe si hay error
+            }
+        }
+        public async Task<UsuarioRegistro?> ObtenerUsuarioPorNombreOEmailAsync(string usuarioOEmail)
+        {
+            const string sql = @"
+				SELECT nombre, usuario, email, contrasena
+				FROM usuarios
+				WHERE usuario = @Valor OR email = @Valor
+				LIMIT 1;";
+
+            try
+            {
+                using var conexion = _clienteBBDD.ObtenerConexion();
+                return await conexion.QueryFirstOrDefaultAsync<UsuarioRegistro>(sql, new { Valor = usuarioOEmail });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al obtener usuario: {ex.Message}");
+                return null;
             }
         }
 

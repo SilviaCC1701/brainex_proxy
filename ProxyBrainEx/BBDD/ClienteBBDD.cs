@@ -1,7 +1,6 @@
-﻿using Dapper;
-using MySql.Data.MySqlClient;
-using System.Data;
+﻿using MySql.Data.MySqlClient;
 using ProxyBrainEx.Config;
+using System.Data;
 
 namespace ProxyBrainEx.BBDD
 {
