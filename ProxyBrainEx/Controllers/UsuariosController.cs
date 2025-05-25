@@ -94,7 +94,8 @@ namespace ProxyBrainEx.Controllers
                 {
                     nombre = usuarioDB.Nombre,
                     usuario = usuarioDB.Usuario,
-                    email = usuarioDB.Email
+                    email = usuarioDB.Email,
+                    guid = usuarioDB.Guid_id
                 }
             });
         }

@@ -41,7 +41,7 @@ namespace ProxyBrainEx.BBDD
         }
         public async Task<bool> UsuarioExisteAsync(string nombreUsuario, string email)
         {
-            const string sql = "SELECT COUNT(*) FROM usuarios WHERE usuario = @Usuario OR email = @Email";
+            const string sql = "SELECT COUNT(*) FROM usuarios WHERE usuario = @UsuarioBBDD OR email = @Email";
 
             try
             {
@@ -55,10 +55,10 @@ namespace ProxyBrainEx.BBDD
                 return true; // Por seguridad, asumimos que existe si hay error
             }
         }
-        public async Task<UsuarioRegistro?> ObtenerUsuarioPorNombreOEmailAsync(string usuarioOEmail)
+        public async Task<UsuarioBBDD?> ObtenerUsuarioPorNombreOEmailAsync(string usuarioOEmail)
         {
             const string sql = @"
-				SELECT nombre, usuario, email, contrasena
+				SELECT nombre, usuario, email, contrasena, guid_id
 				FROM usuarios
 				WHERE usuario = @Valor OR email = @Valor
 				LIMIT 1;";
@@ -66,7 +66,7 @@ namespace ProxyBrainEx.BBDD
             try
             {
                 using var conexion = _clienteBBDD.ObtenerConexion();
-                return await conexion.QueryFirstOrDefaultAsync<UsuarioRegistro>(sql, new { Valor = usuarioOEmail });
+                return await conexion.QueryFirstOrDefaultAsync<UsuarioBBDD>(sql, new { Valor = usuarioOEmail });
             }
             catch (Exception ex)
             {
