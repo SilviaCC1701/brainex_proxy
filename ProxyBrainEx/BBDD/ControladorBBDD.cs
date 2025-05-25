@@ -92,6 +92,29 @@ namespace ProxyBrainEx.BBDD
                 return false;
             }
         }
+        public async Task<bool> InsertarEstadisticaGenericaAsync(string tabla, string guid, DateTime timestamp, object rawData)
+        {
+            string sql = $@"
+                INSERT INTO {tabla} (user_guid, timestamp_utc, raw_data)
+                VALUES (@Guid, @Timestamp, @RawData);";
+
+            try
+            {
+                using var conn = _clienteBBDD.ObtenerConexion();
+                var filas = await conn.ExecuteAsync(sql, new
+                {
+                    Guid = guid,
+                    Timestamp = timestamp,
+                    RawData = System.Text.Json.JsonSerializer.Serialize(rawData)
+                });
+                return filas > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al insertar en {tabla}: {ex.Message}");
+                return false;
+            }
+        }
 
     }
 }
