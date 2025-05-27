@@ -41,7 +41,7 @@ namespace ProxyBrainEx.BBDD
         }
         public async Task<bool> UsuarioExisteAsync(string nombreUsuario, string email)
         {
-            const string sql = "SELECT COUNT(*) FROM usuarios WHERE usuario = @UsuarioBBDD OR email = @Email";
+            const string sql = "SELECT COUNT(*) FROM usuarios WHERE usuario = @Usuario OR email = @Email";
 
             try
             {
