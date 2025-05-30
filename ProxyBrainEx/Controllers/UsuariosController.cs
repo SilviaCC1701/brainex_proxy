@@ -100,6 +100,28 @@ namespace ProxyBrainEx.Controllers
             });
         }
 
+        [HttpGet("info-user/{guid}")]
+        public async Task<IActionResult> GetInfoUser(string guid)
+        {
+            if (string.IsNullOrEmpty(guid)) { return BadRequest(new { mensaje = "El Guid no es valido." }); }
 
+            var controlador = new ControladorBBDD();
+            var usuarioDB = await controlador.GetUserByGuid(guid);
+
+            if (usuarioDB == null) { return NotFound(new { mensaje = "El usuario no ha sido encontrado." }); }
+
+            return Ok(new
+            {
+                exito = true,
+                mensaje = "Datos obtenidos de forma correcta.",
+                usuario = new
+                {
+                    nombre = usuarioDB.Nombre,
+                    usuario = usuarioDB.Usuario,
+                    email = usuarioDB.Email,
+                    guid = usuarioDB.Guid_id
+                }
+            });
+        }
     }
 }

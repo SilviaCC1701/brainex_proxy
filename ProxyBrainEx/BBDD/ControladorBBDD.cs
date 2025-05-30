@@ -1,4 +1,6 @@
 ﻿using Dapper;
+using Google.Protobuf.WellKnownTypes;
+using Org.BouncyCastle.Asn1.Pkcs;
 using ProxyBrainEx.Models;
 
 namespace ProxyBrainEx.BBDD
@@ -100,8 +102,8 @@ namespace ProxyBrainEx.BBDD
 
             try
             {
-                using var conn = _clienteBBDD.ObtenerConexion();
-                var filas = await conn.ExecuteAsync(sql, new
+                using var conexion = _clienteBBDD.ObtenerConexion();
+                var filas = await conexion.ExecuteAsync(sql, new
                 {
                     Guid = guid,
                     Timestamp = timestamp,
@@ -111,10 +113,28 @@ namespace ProxyBrainEx.BBDD
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error al insertar en {tabla}: {ex.Message}");
+                Console.WriteLine($"Error al insertar en {tabla}: {ex.Message}");
                 return false;
             }
         }
 
+        public async Task<UsuarioBBDD?> GetUserByGuid(string guid)
+        {
+            const string sql = 
+              @"SELECT nombre, usuario, email, guid_id 
+				FROM usuarios 
+				WHERE guid_id = @GuidID;";
+
+            try
+            {
+                using var conexion = _clienteBBDD.ObtenerConexion();
+                return await conexion.QueryFirstOrDefaultAsync<UsuarioBBDD>(sql, new { GuidID = guid });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al obtener usuario '{guid}': {ex.Message}");
+                return null;
+            }  
+        }
     }
 }
