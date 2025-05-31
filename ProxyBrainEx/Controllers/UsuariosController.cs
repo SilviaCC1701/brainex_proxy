@@ -112,15 +112,10 @@ namespace ProxyBrainEx.Controllers
 
             return Ok(new
             {
-                exito = true,
-                mensaje = "Datos obtenidos de forma correcta.",
-                usuario = new
-                {
-                    nombre = usuarioDB.Nombre,
-                    usuario = usuarioDB.Usuario,
-                    email = usuarioDB.Email,
-                    guid = usuarioDB.Guid_id
-                }
+                Name = usuarioDB.Nombre,
+                UserName = usuarioDB.Usuario,
+                Email = usuarioDB.Email,
+                Guid = usuarioDB.Guid_id
             });
         }
     }
