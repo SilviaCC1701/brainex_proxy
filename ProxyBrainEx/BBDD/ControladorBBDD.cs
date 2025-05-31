@@ -164,5 +164,39 @@ namespace ProxyBrainEx.BBDD
                 return new List<PartidaItemBBDD>();
             }
         }
+
+        public async Task<PartidaItemBBDD?> ObtenerPartidaPorIdYTipoAsync(string guid, int id, string tipo)
+        {
+            var tabla = tipo.ToLower() switch
+            {
+                "calculo_rapido" => "calculo_rapido",
+                "completa_operacion" => "completa_operacion",
+                "encuentra_patron" => "encuentra_patron",
+                "sigue_secuencia" => "sigue_secuencia",
+                "memory_game" => "memory_game",
+                "torre_hanoi" => "torre_hanoi",
+                _ => null
+            };
+
+            if (tabla == null) return null;
+
+            var sql = $@"
+                SELECT id, timestamp_utc, raw_data, '{tabla}' AS tipo
+                FROM {tabla}
+                WHERE id = @Id AND user_guid = @Guid
+                LIMIT 1;";
+
+            try
+            {
+                using var conexion = _clienteBBDD.ObtenerConexion();
+                return await conexion.QueryFirstOrDefaultAsync<PartidaItemBBDD>(sql, new { Id = id, Guid = guid });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo partida '{tipo}' con ID {id}: {ex.Message}");
+                return null;
+            }
+        }
+
     }
 }
