@@ -1,6 +1,4 @@
 ﻿using Dapper;
-using Google.Protobuf.WellKnownTypes;
-using Org.BouncyCastle.Asn1.Pkcs;
 using ProxyBrainEx.Models;
 
 namespace ProxyBrainEx.BBDD
@@ -80,7 +78,7 @@ namespace ProxyBrainEx.BBDD
         {
             const string sql = @"
                 INSERT INTO calculo_rapido (user_guid, timestamp_utc, raw_data)
-                VALUES (@GuidUsuario, @TimestampUtc, @RawData);";
+                VALUES (@GuidUsuario, @Timestamp_Utc, @Raw_Data);";
 
             try
             {
@@ -98,7 +96,7 @@ namespace ProxyBrainEx.BBDD
         {
             string sql = $@"
                 INSERT INTO {tabla} (user_guid, timestamp_utc, raw_data)
-                VALUES (@Guid, @Timestamp, @RawData);";
+                VALUES (@Guid, @Timestamp, @Raw_Data);";
 
             try
             {
@@ -120,7 +118,7 @@ namespace ProxyBrainEx.BBDD
 
         public async Task<UsuarioBBDD?> GetUserByGuid(string guid)
         {
-            const string sql = 
+            const string sql =
               @"SELECT nombre, usuario, email, guid_id 
 				FROM usuarios 
 				WHERE guid_id = @GuidID;";
@@ -134,7 +132,37 @@ namespace ProxyBrainEx.BBDD
             {
                 Console.WriteLine($"Error al obtener usuario '{guid}': {ex.Message}");
                 return null;
-            }  
+            }
+        }
+
+        public async Task<List<PartidaItemBBDD>> ObtenerPartidasPorUsuarioAsync(string guid)
+        {
+            var sql = @"
+                SELECT id, user_guid, timestamp_utc, raw_data, 'calculo_rapido' AS tipo FROM calculo_rapido WHERE user_guid = @Guid
+                UNION ALL
+                SELECT id, user_guid, timestamp_utc, raw_data, 'completa_operacion' AS tipo FROM completa_operacion WHERE user_guid = @Guid
+                UNION ALL
+                SELECT id, user_guid, timestamp_utc, raw_data, 'encuentra_patron' AS tipo FROM encuentra_patron WHERE user_guid = @Guid
+                UNION ALL
+                SELECT id, user_guid, timestamp_utc, raw_data, 'sigue_secuencia' AS tipo FROM sigue_secuencia WHERE user_guid = @Guid
+                UNION ALL
+                SELECT id, user_guid, timestamp_utc, raw_data, 'memory_game' AS tipo FROM memory_game WHERE user_guid = @Guid
+                UNION ALL
+                SELECT id, user_guid, timestamp_utc, raw_data, 'torre_hanoi' AS tipo FROM torre_hanoi WHERE user_guid = @Guid
+                ORDER BY timestamp_utc DESC;
+            ";
+
+            try
+            {
+                using var conexion = _clienteBBDD.ObtenerConexion();
+                var resultados = await conexion.QueryAsync<PartidaItemBBDD>(sql, new { Guid = guid });
+                return resultados.ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en ObtenerPartidasPorUsuarioAsync: {ex.Message}");
+                return new List<PartidaItemBBDD>();
+            }
         }
     }
 }

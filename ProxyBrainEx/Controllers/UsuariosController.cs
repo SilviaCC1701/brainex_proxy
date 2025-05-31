@@ -2,6 +2,7 @@
 using ProxyBrainEx.BBDD;
 using ProxyBrainEx.Models;
 using ProxyBrainEx.Utils;
+using System.Text.Json;
 
 namespace ProxyBrainEx.Controllers
 {
@@ -117,6 +118,75 @@ namespace ProxyBrainEx.Controllers
                 Email = usuarioDB.Email,
                 Guid = usuarioDB.Guid_id
             });
+        }
+
+        [HttpGet("partidas/{guid}")]
+        public async Task<IActionResult> GetListPartidas(string guid)
+        {
+            if (string.IsNullOrWhiteSpace(guid))
+                return BadRequest(new { mensaje = "El Guid no es valido." });
+
+            var controlador = new ControladorBBDD();
+            var partidasBBDD = await controlador.ObtenerPartidasPorUsuarioAsync(guid);
+            var partidas = ConvertirPartidas(partidasBBDD);
+
+            return Ok(partidas);
+        }
+
+        public static List<PartidaItem> ConvertirPartidas(List<PartidaItemBBDD> partidasBBDD)
+        {
+            var lista = new List<PartidaItem>();
+
+            foreach (var r in partidasBBDD)
+            {
+                double tiempoTotal = 0;
+
+                try
+                {
+                    using var jsonDoc = JsonDocument.Parse(r.Raw_Data);
+                    var root = jsonDoc.RootElement;
+
+                    switch (r.Tipo)
+                    {
+                        case "torre_hanoi":
+                            if (root.TryGetProperty("timeElapsed", out var tiempoHanoi))
+                                tiempoTotal = tiempoHanoi.GetDouble();
+                            break;
+
+                        case "completa_operacion":
+                        case "calculo_rapido":
+                            if (root.TryGetProperty("timesPerOp", out var tiemposOp))
+                                tiempoTotal = tiemposOp.EnumerateArray().Sum(x => x.GetDouble());
+                            break;
+
+                        case "memory_game":
+                        case "sigue_secuencia":
+                            if (root.TryGetProperty("timesPerRound", out var tiemposRound))
+                                tiempoTotal = tiemposRound.EnumerateArray().Sum(x => x.GetDouble());
+                            break;
+
+                        case "encuentra_patron":
+                            if (root.TryGetProperty("timesPerSeq", out var tiemposSeq))
+                                tiempoTotal = tiemposSeq.EnumerateArray().Sum(x => x.GetDouble());
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error procesando partida tipo '{r.Tipo}' con ID {r.Id}: {ex.Message}");
+                    tiempoTotal = 0;
+                }
+
+                lista.Add(new PartidaItem
+                {
+                    Id = r.Id,
+                    Fecha = r.Timestamp_Utc,
+                    Tipo = r.Tipo,
+                    Segundos = Math.Round(tiempoTotal, 2)
+                });
+            }
+
+            return lista;
         }
     }
 }
