@@ -74,29 +74,11 @@ namespace ProxyBrainEx.BBDD
                 return null;
             }
         }
-        public async Task<bool> InsertarEstadisticaCalculoRapidoAsync(EstadisticaCalculoRapido estadistica)
-        {
-            const string sql = @"
-                INSERT INTO calculo_rapido (user_guid, timestamp_utc, raw_data)
-                VALUES (@GuidUsuario, @Timestamp_Utc, @Raw_Data);";
-
-            try
-            {
-                using var conexion = _clienteBBDD.ObtenerConexion();
-                var filas = await conexion.ExecuteAsync(sql, estadistica);
-                return filas > 0;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error al insertar estadística: {ex.Message}");
-                return false;
-            }
-        }
         public async Task<bool> InsertarEstadisticaGenericaAsync(string tabla, string guid, DateTime timestamp, object rawData)
         {
             string sql = $@"
                 INSERT INTO {tabla} (user_guid, timestamp_utc, raw_data)
-                VALUES (@Guid, @Timestamp, @Raw_Data);";
+                VALUES (@Guid, @Timestamp, @RawData);";
 
             try
             {

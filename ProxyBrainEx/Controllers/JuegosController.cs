@@ -16,23 +16,9 @@ namespace ProxyBrainEx.Controllers
         }
 
         [HttpPost("calculo-rapido")]
-        public async Task<IActionResult> RegistrarCalculoRapido([FromBody] EstadisticaCalculoRapidoPayload payload)
+        public async Task<IActionResult> RegistrarCalculoRapido([FromBody] EstadisticaPayload payload)
         {
-            if (payload == null || string.IsNullOrWhiteSpace(payload.Guid) || payload.Data == null)
-                return BadRequest(new { exito = false, mensaje = "Datos incompletos." });
-
-            var estadistica = new EstadisticaCalculoRapido
-            {
-                GuidUsuario = payload.Guid,
-                TimestampUtc = payload.Timestamp,
-                RawData = System.Text.Json.JsonSerializer.Serialize(payload.Data)
-            };
-
-            var resultado = await _bbdd.InsertarEstadisticaCalculoRapidoAsync(estadistica);
-            if (!resultado)
-                return StatusCode(500, new { exito = false, mensaje = "Error al guardar la estadística." });
-
-            return Ok(new { exito = true, mensaje = "Estadística guardada correctamente." });
+            return await InsertarGenerico(payload, "calculo_rapido");
         }
 
         [HttpPost("completa-operacion")]
