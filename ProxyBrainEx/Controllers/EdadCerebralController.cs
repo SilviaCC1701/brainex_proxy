@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using ProxyBrainEx.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace ProxyBrainEx.Controllers
 {
@@ -59,34 +61,34 @@ namespace ProxyBrainEx.Controllers
             }
 
             if (data.Juego1 != null)
-                EvaluarJuego("Cálculo rápido", "Atención / Agilidad numérica", data.Juego1.AttemptsPerOp, data.Juego1.TimesPerOp);
+                EvaluarJuego("Cálculo rápido", "Atención / Agilidad numérica", data.Juego1.attemptsPerOp, data.Juego1.timesPerOp);
 
             if (data.Juego2 != null)
-                EvaluarJuego("Sigue la secuencia", "Memoria visual", data.Juego2.AttemptsPerRound, data.Juego2.TimesPerRound);
+                EvaluarJuego("Sigue la secuencia", "Memoria visual", data.Juego2.attemptsPerRound, data.Juego2.timesPerRound);
 
             if (data.Juego3 != null)
-                EvaluarJuego("Encuentra el patrón", "Lógica / Secuencial", data.Juego3.AttemptsPerSeq, data.Juego3.TimesPerSeq);
+                EvaluarJuego("Encuentra el patrón", "Lógica / Secuencial", data.Juego3.attemptsPerSeq, data.Juego3.timesPerSeq);
 
             if (data.Juego4 != null)
-                EvaluarJuego("Memoria de color", "Memoria de trabajo", data.Juego4.AttemptsPerRound, data.Juego4.TimesPerRound);
+                EvaluarJuego("Memoria de color", "Memoria de trabajo", data.Juego4.attemptsPerRound, data.Juego4.timesPerRound);
 
             if (data.Juego5 != null)
-                EvaluarJuego("Completa la operación", "Razonamiento numérico", data.Juego5.AttemptsPerOp, data.Juego5.TimesPerOp);
+                EvaluarJuego("Completa la operación", "Razonamiento numérico", data.Juego5.attemptsPerOp, data.Juego5.timesPerOp);
 
             if (data.Juego6 != null)
             {
-                double eficiencia = data.Juego6.Efficiency;
+                double eficiencia = data.Juego6.efficiency;
                 if (eficiencia < 70) { penalizacion += 2; banderasDiagnostico.Add("Torre de Hanoi: baja eficiencia"); }
                 if (eficiencia < 90) { penalizacion += 1; }
                 if (eficiencia >= 100) bonus += 1;
 
-                tiempoTotal += data.Juego6.TimeElapsed;
+                tiempoTotal += data.Juego6.timeElapsed;
 
                 resumen.Add(new ResumenJuego
                 {
                     Juego = "Torre de Hanoi",
                     Categoria = "Lógica / Planificación",
-                    TiempoMedio = Math.Round(data.Juego6.TimeElapsed, 2),
+                    TiempoMedio = Math.Round(data.Juego6.timeElapsed, 2),
                     DesviacionTiempo = 0,
                     AciertosPrimera = 1,
                     Total = 1,
@@ -98,6 +100,12 @@ namespace ProxyBrainEx.Controllers
             }
 
             double edadFinal = Math.Clamp(edadBase + penalizacion - bonus, 16, 90);
+            string juego1Json = JsonSerializer.Serialize(data.Juego1);
+            string juego2Json = JsonSerializer.Serialize(data.Juego2);
+            string juego3Json = JsonSerializer.Serialize(data.Juego3);
+            string juego4Json = JsonSerializer.Serialize(data.Juego4);
+            string juego5Json = JsonSerializer.Serialize(data.Juego5);
+            string juego6Json = JsonSerializer.Serialize(data.Juego6);
 
             return Ok(new EdadCerebralResultado
             {
@@ -106,7 +114,14 @@ namespace ProxyBrainEx.Controllers
                 TiempoTotalSegundos = Math.Round(tiempoTotal, 1),
                 ResumenPorJuego = resumen,
                 Diagnostico = GenerarDiagnosticoAvanzado(edadFinal, resumen, banderasDiagnostico),
-                Recomendaciones = GenerarRecomendacionesPersonalizadas(resumen)
+                Recomendaciones = GenerarRecomendacionesPersonalizadas(resumen),
+
+                ResultadoCalculoRapido = new ResultadoCalculoRapido(juego1Json),
+                ResultadoSigueSecuencia = new ResultadoSigueSecuencia(juego2Json),
+                ResultadoEncuentraPatron = new ResultadoEncuentraPatron(juego3Json),
+                ResultadoMemoryGame = new ResultadoMemoryGame(juego4Json),
+                ResultadoCompletaOperacion = new ResultadoCompletaOperacion(juego5Json),
+                ResultadoTorreHanoi = new ResultadoTorreHanoi(juego6Json)
             });
         }
 
@@ -180,84 +195,4 @@ namespace ProxyBrainEx.Controllers
         }
     }
 
-    public class EdadCerebralRequest
-    {
-        public DateTime FechaInicio { get; set; }
-        public DateTime? FechaFin { get; set; }
-        public Juego1Data? Juego1 { get; set; }
-        public Juego2Data? Juego2 { get; set; }
-        public Juego3Data? Juego3 { get; set; }
-        public Juego4Data? Juego4 { get; set; }
-        public Juego5Data? Juego5 { get; set; }
-        public Juego6Data? Juego6 { get; set; }
-    }
-
-    public class EdadCerebralResultado
-    {
-        public int EdadEstimada { get; set; }
-        public double PuntuacionGlobal { get; set; }
-        public double TiempoTotalSegundos { get; set; }
-        public List<ResumenJuego> ResumenPorJuego { get; set; } = new();
-        public string Diagnostico { get; set; } = "";
-        public List<string> Recomendaciones { get; set; } = new();
-    }
-
-    public class ResumenJuego
-    {
-        public string Juego { get; set; } = "";
-        public string Categoria { get; set; } = "";
-        public double TiempoMedio { get; set; }
-        public double DesviacionTiempo { get; set; }
-        public int AciertosPrimera { get; set; }
-        public int Total { get; set; }
-        public int Errores { get; set; }
-        public double Precision { get; set; }
-        public double TiempoPorError { get; set; }
-        public double Eficiencia { get; set; }
-    }
-
-    public class Juego1Data
-    {
-        public List<string> Operations { get; set; } = new();
-        public List<int> AttemptsPerOp { get; set; } = new();
-        public List<double> TimesPerOp { get; set; } = new();
-    }
-
-    public class Juego2Data
-    {
-        public List<int> AttemptsPerRound { get; set; } = new();
-        public List<double> TimesPerRound { get; set; } = new();
-        public List<int>? PerfectRounds { get; set; }
-    }
-
-    public class Juego3Data
-    {
-        public List<List<int>> Sequences { get; set; } = new();
-        public List<int> ExpectedValues { get; set; } = new();
-        public List<int> AttemptsPerSeq { get; set; } = new();
-        public List<double> TimesPerSeq { get; set; } = new();
-    }
-
-    public class Juego4Data
-    {
-        public List<int> AttemptsPerRound { get; set; } = new();
-        public List<double> TimesPerRound { get; set; } = new();
-        public List<int>? PerfectRounds { get; set; }
-    }
-
-    public class Juego5Data
-    {
-        public List<string> Operations { get; set; } = new();
-        public List<int> AttemptsPerOp { get; set; } = new();
-        public List<double> TimesPerOp { get; set; } = new();
-    }
-
-    public class Juego6Data
-    {
-        public int TotalDisks { get; set; }
-        public int MoveCount { get; set; }
-        public double TimeElapsed { get; set; }
-        public int OptimalMoves { get; set; }
-        public double Efficiency { get; set; }
-    }
 }

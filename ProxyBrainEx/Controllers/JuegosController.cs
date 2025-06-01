@@ -63,12 +63,6 @@ namespace ProxyBrainEx.Controllers
 
             return Ok(new { exito = true, mensaje = "Estadística guardada correctamente." });
         }
-        public class EstadisticaCalculoRapidoPayload
-        {
-            public string Guid { get; set; } = string.Empty;
-            public DateTime Timestamp { get; set; }
-            public object? Data { get; set; }
-        }
         public class EstadisticaPayload
         {
             public string Guid { get; set; } = string.Empty;
