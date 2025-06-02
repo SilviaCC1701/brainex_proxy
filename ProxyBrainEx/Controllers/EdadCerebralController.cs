@@ -254,13 +254,23 @@ namespace ProxyBrainEx.Controllers
             }
         }
 
-        [HttpGet("resultado")]
-        public async Task<IActionResult> ObtenerResultadoEdadCerebral([FromQuery] string guid, [FromQuery] int id)
+        [HttpGet("partida/{guid}/{id_partida}")]
+        public async Task<IActionResult> ObtenerResultadoEdadCerebral(string guid, string id_partida)
         {
-            if (string.IsNullOrWhiteSpace(guid) || id <= 0)
+            if (string.IsNullOrWhiteSpace(guid) || string.IsNullOrWhiteSpace(id_partida))
             {
                 return BadRequest("Parámetros inválidos.");
             }
+
+            var underscoreIndex = id_partida.IndexOf('_');
+            if (underscoreIndex <= 0 || underscoreIndex >= id_partida.Length - 1)
+                return BadRequest(new { mensaje = "Formato de ID incorrecto." });
+
+            var idPart = id_partida.Substring(0, underscoreIndex);
+            var tipo = id_partida.Substring(underscoreIndex + 1);
+
+            if (!int.TryParse(idPart, out int id))
+                return BadRequest(new { mensaje = "ID de partida inválido." });
 
             try
             {
