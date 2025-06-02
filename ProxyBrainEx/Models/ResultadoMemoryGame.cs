@@ -38,6 +38,8 @@ namespace ProxyBrainEx.Models
                 });
             }
         }
+
+        public ResultadoMemoryGame() { }
     }
 
     public class DetalleMemoryFase

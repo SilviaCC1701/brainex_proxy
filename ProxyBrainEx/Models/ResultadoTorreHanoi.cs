@@ -4,6 +4,7 @@ namespace ProxyBrainEx.Models
 {
     public class ResultadoTorreHanoi
     {
+        public ResultadoTorreHanoi() { }
         public int Movimientos { get; set; }
         public double TiempoTotal { get; set; }
         public int Discos { get; set; }

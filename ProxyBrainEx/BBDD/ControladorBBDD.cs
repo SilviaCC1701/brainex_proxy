@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using ProxyBrainEx.Models;
+using System.Text.Json;
 
 namespace ProxyBrainEx.BBDD
 {
@@ -176,6 +177,87 @@ namespace ProxyBrainEx.BBDD
             catch (Exception ex)
             {
                 Console.WriteLine($"Error obteniendo partida '{tipo}' con ID {id}: {ex.Message}");
+                return null;
+            }
+        }
+        public async Task<bool> InsertarResultadoEdadCerebralAsync(string guid, EdadCerebralResultado resultado)
+        {
+            const string sql = @"
+                INSERT INTO edad_cerebral_resultado
+                (user_guid, timestamp_utc, edad_estimada, puntuacion_global, tiempo_total, raw_data)
+                VALUES
+                (@Guid, @Timestamp, @EdadEstimada, @PuntuacionGlobal, @TiempoTotal, @RawData);";
+
+            try
+            {
+                using var conexion = _clienteBBDD.ObtenerConexion();
+                var parametros = new
+                {
+                    Guid = guid,
+                    Timestamp = DateTime.UtcNow,
+                    EdadEstimada = resultado.EdadEstimada,
+                    PuntuacionGlobal = resultado.PuntuacionGlobal,
+                    TiempoTotal = resultado.TiempoTotalSegundos,
+                    RawData = JsonSerializer.Serialize(resultado)
+                };
+
+                var filas = await conexion.ExecuteAsync(sql, parametros);
+                return filas > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al insertar resultado edad cerebral: {ex.Message}");
+                return false;
+            }
+        }
+        public async Task<int?> ObtenerEdadEstimadaPorGuidAsync(string guid)
+        {
+            const string sql = @"
+                SELECT edad_estimada
+                FROM edad_cerebral_resultado
+                WHERE user_guid = @Guid
+                ORDER BY timestamp_utc DESC
+                LIMIT 1;";
+
+            try
+            {
+                using var conexion = _clienteBBDD.ObtenerConexion();
+                return await conexion.ExecuteScalarAsync<int?>(sql, new { Guid = guid });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al obtener edad estimada: {ex.Message}");
+                return null;
+            }
+        }
+        public async Task<EdadCerebralResultado?> ObtenerResultadoEdadCerebralPorIdAsync(string guid, int id)
+        {
+            const string sql = @"
+                SELECT raw_data
+                FROM edad_cerebral_resultado
+                WHERE id = @Id AND user_guid = @Guid
+                LIMIT 1;";
+
+            try
+            {
+                using var conexion = _clienteBBDD.ObtenerConexion();
+                var rawJson = await conexion.ExecuteScalarAsync<string?>(sql, new { Id = id, Guid = guid });
+
+                if (string.IsNullOrWhiteSpace(rawJson))
+                {
+                    return null;
+                }
+
+                var resultado = JsonSerializer.Deserialize<EdadCerebralResultado>(rawJson, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al obtener resultado edad cerebral: {ex.Message}");
                 return null;
             }
         }

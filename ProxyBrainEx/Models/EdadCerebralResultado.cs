@@ -4,6 +4,7 @@ namespace ProxyBrainEx.Models
 {
     public class EdadCerebralResultado
     {
+        public EdadCerebralResultado() { }
         public int EdadEstimada { get; set; }
         public double PuntuacionGlobal { get; set; }
         public double TiempoTotalSegundos { get; set; }

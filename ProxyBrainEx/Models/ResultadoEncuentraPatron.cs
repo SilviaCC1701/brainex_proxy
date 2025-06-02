@@ -45,5 +45,6 @@ namespace ProxyBrainEx.Models
                 });
             }
         }
+        public ResultadoEncuentraPatron() { }
     }
 }

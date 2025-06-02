@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using ProxyBrainEx.BBDD;
 using ProxyBrainEx.Models;
 using System;
 using System.Collections.Generic;
@@ -193,6 +194,93 @@ namespace ProxyBrainEx.Controllers
             }
             return recs.Distinct().ToList();
         }
+
+        [HttpPost("guardar")]
+        public async Task<IActionResult> GuardarResultado([FromBody] GuardarEdadCerebral guardarEdadCerebral)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(guardarEdadCerebral.Guid))
+                {
+                    return BadRequest("GUID no válido.");
+                }
+
+                var resultado = guardarEdadCerebral.Resultado;
+                if (resultado == null)
+                {
+                    return BadRequest("Resultado inválido.");
+                }
+
+                var db = new ControladorBBDD();
+                var exito = await db.InsertarResultadoEdadCerebralAsync(guardarEdadCerebral.Guid, resultado);
+
+                if (!exito)
+                {
+                    return StatusCode(500, "No se pudo guardar el resultado en la base de datos.");
+                }
+                return Ok(new { mensaje = "Resultado guardado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al guardar resultado: {ex.Message}");
+                return StatusCode(500, "Error interno al procesar los datos.");
+            }
+        }
+
+        [HttpGet("ultima-edad")]
+        public async Task<IActionResult> ObtenerEdadEstimada([FromQuery] string guid)
+        {
+            if (string.IsNullOrWhiteSpace(guid))
+            {
+                return BadRequest("GUID inválido.");
+            }
+
+            try
+            {
+                var db = new ControladorBBDD();
+                var edad = await db.ObtenerEdadEstimadaPorGuidAsync(guid);
+
+                if (edad == null)
+                {
+                    return NotFound("No se encontró una edad cerebral registrada para este usuario.");
+                } 
+
+                return Ok(edad);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al consultar edad estimada: {ex.Message}");
+                return StatusCode(500, "Error al consultar los datos.");
+            }
+        }
+
+        [HttpGet("resultado")]
+        public async Task<IActionResult> ObtenerResultadoEdadCerebral([FromQuery] string guid, [FromQuery] int id)
+        {
+            if (string.IsNullOrWhiteSpace(guid) || id <= 0)
+            {
+                return BadRequest("Parámetros inválidos.");
+            }
+
+            try
+            {
+                var db = new ControladorBBDD();
+                var resultado = await db.ObtenerResultadoEdadCerebralPorIdAsync(guid, id);
+
+                if (resultado == null)
+                {
+                    return NotFound("No se encontró el resultado con los parámetros proporcionados.");
+                }
+                return Ok(resultado);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al consultar resultado: {ex.Message}");
+                return StatusCode(500, "Error al obtener los datos.");
+            }
+        }
+
+
     }
 
 }
