@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿ using Microsoft.AspNetCore.Mvc;
 using ProxyBrainEx.BBDD;
 using ProxyBrainEx.Models;
 using ProxyBrainEx.Utils;
@@ -219,7 +219,12 @@ namespace ProxyBrainEx.Controllers
 							if (root.TryGetProperty("timesPerSeq", out var tiemposSeq))
 								tiempoTotal = tiemposSeq.EnumerateArray().Sum(x => x.GetDouble());
 							break;
-					}
+                        case "edad_cerebral":
+                            if (root.TryGetProperty("TiempoTotalSegundos", out var tiempoTotalProp))
+                                tiempoTotal = tiempoTotalProp.GetDouble();
+                            break;
+
+                    }
 				}
 				catch (Exception ex)
 				{

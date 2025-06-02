@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ProxyBrainEx.BBDD;
-using ProxyBrainEx.Models;
 
 namespace ProxyBrainEx.Controllers
 {

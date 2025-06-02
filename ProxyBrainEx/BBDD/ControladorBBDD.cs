@@ -132,6 +132,8 @@ namespace ProxyBrainEx.BBDD
                 SELECT id, user_guid, timestamp_utc, raw_data, 'memory_game' AS tipo FROM memory_game WHERE user_guid = @Guid
                 UNION ALL
                 SELECT id, user_guid, timestamp_utc, raw_data, 'torre_hanoi' AS tipo FROM torre_hanoi WHERE user_guid = @Guid
+                UNION ALL
+                SELECT id, user_guid, timestamp_utc, raw_data, 'edad_cerebral' AS tipo FROM edad_cerebral_resultado WHERE user_guid = @Guid
                 ORDER BY timestamp_utc DESC;
             ";
 
@@ -147,6 +149,7 @@ namespace ProxyBrainEx.BBDD
                 return new List<PartidaItemBBDD>();
             }
         }
+
 
         public async Task<PartidaItemBBDD?> ObtenerPartidaPorIdYTipoAsync(string guid, int id, string tipo)
         {
